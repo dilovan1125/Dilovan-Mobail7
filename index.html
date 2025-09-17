@@ -7,54 +7,45 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-body { font-family:"Cairo",sans-serif; margin:0; background:#f0f6ff; color:#333; direction:rtl; }
-header { background:#1976d2; color:white; padding:20px; text-align:center; font-size:24px; font-weight:bold; }
-nav { display:flex; justify-content:space-around; background:#2196f3; padding:12px; }
-nav button { background:white; color:#1976d2; border:none; padding:12px 18px; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer; }
-nav button.active { background:#0d47a1; color:white; }
-section { display:none; max-width:950px; margin:20px auto; background:white; padding:20px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.15); }
-section.active { display:block; animation:fadeIn 0.3s ease; }
-@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-label { display:block; margin-top:12px; font-weight:bold; color:#0d47a1; }
-input,button.action { margin-top:6px; padding:10px; font-size:16px; width:100%; border-radius:6px; border:1px solid #bbb; box-sizing:border-box; }
-button.action { background:#1976d2; color:white; border:none; font-weight:bold; cursor:pointer; }
-button.action:hover { background:#0d47a1; }
-table { width:100%; border-collapse:collapse; margin-top:15px; font-size:15px; }
-th,td { border:1px solid #ddd; padding:8px; text-align:center; }
-th { background:#e3f2fd; }
-.btn-sm { padding:6px 10px; border:none; border-radius:6px; cursor:pointer; }
-.btn-edit { background:#3498db; color:#fff; }
-.btn-del { background:#e74c3c; color:#fff; }
-.btn-exp { background:#1abc9c; color:#fff; margin-top:10px; }
-
-/* ✅ Modal الماسح مع زر إغلاق */
-#scannerModal{
-  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6);
-  justify-content:center; align-items:center; z-index:999;
-}
-#scannerBox{
-  background:#fff; padding:10px; border-radius:10px; position:relative;
-  width:320px; height:280px; display:flex; flex-direction:column; align-items:center;
-}
-#scannerBox video{ width:100%; height:100%; object-fit:cover; border-radius:8px; }
-#closeScan{
-  position:absolute; top:5px; right:5px; background:#e74c3c; color:#fff;
-  border:none; padding:6px 10px; border-radius:6px; font-weight:bold; cursor:pointer;
-}
+body{font-family:"Cairo",sans-serif;margin:0;background:#f0f6ff;color:#333;direction:rtl;}
+header{background:#1976d2;color:white;padding:20px;text-align:center;font-size:24px;font-weight:bold;}
+nav{display:flex;justify-content:space-around;background:#2196f3;padding:12px;}
+nav button{background:white;color:#1976d2;border:none;padding:12px 18px;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;}
+nav button.active{background:#0d47a1;color:white;}
+section{display:none;max-width:950px;margin:20px auto;background:white;padding:20px;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.15);}
+section.active{display:block;animation:fadeIn 0.3s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+label{display:block;margin-top:12px;font-weight:bold;color:#0d47a1;}
+input,button.action{margin-top:6px;padding:10px;font-size:16px;width:100%;border-radius:6px;border:1px solid #bbb;box-sizing:border-box;}
+button.action{background:#1976d2;color:white;border:none;font-weight:bold;cursor:pointer;}
+button.action:hover{background:#0d47a1;}
+table{width:100%;border-collapse:collapse;margin-top:15px;font-size:15px;}
+th,td{border:1px solid #ddd;padding:8px;text-align:center;}
+th{background:#e3f2fd;}
+.btn-sm{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
+.btn-edit{background:#3498db;color:#fff;}
+.btn-del{background:#e74c3c;color:#fff;}
+.btn-exp{background:#1abc9c;color:#fff;margin-top:10px;}
+/* مودال الماسح */
+#scannerModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);justify-content:center;align-items:center;z-index:999;}
+#scannerBox{background:#fff;padding:10px;border-radius:10px;position:relative;width:320px;height:280px;display:flex;flex-direction:column;align-items:center;}
+#scannerBox video{width:100%;height:100%;object-fit:cover;border-radius:8px;}
+#closeScan{position:absolute;top:5px;right:5px;background:#e74c3c;color:#fff;border:none;padding:6px 10px;border-radius:6px;font-weight:bold;cursor:pointer;}
+.profit-box{font-size:22px;font-weight:bold;color:#16a34a;margin-top:20px;}
 </style>
 </head>
 <body>
 
 <header>💰 نظام المبيعات</header>
-
 <nav>
   <button onclick="showPage('sell')" id="btn-sell" class="active">🛒 البيع</button>
   <button onclick="showPage('products')" id="btn-products">📦 المنتجات</button>
   <button onclick="showPage('check')" id="btn-check">🔍 معرفة السعر</button>
   <button onclick="showPage('history')" id="btn-history">📑 السجل</button>
+  <button onclick="showPage('profit')" id="btn-profit">📈 صافي الربح</button>
 </nav>
 
-<!-- ✅ Modal للماسح -->
+<!-- مودال الماسح -->
 <div id="scannerModal">
   <div id="scannerBox">
     <button id="closeScan" onclick="stopScanner()">✖ إغلاق</button>
@@ -68,16 +59,12 @@ th { background:#e3f2fd; }
   <label>📦 الباركود</label>
   <input id="sellBarcode">
   <button class="action" onclick="startScanner('sell')">📷 مسح</button>
-
   <label>📛 اسم المنتج</label>
   <input id="sellName" readonly>
-
   <label>🔢 الكمية</label>
   <input id="sellQty" type="number" value="1">
-
   <label>💲 سعر البيع</label>
   <input id="sellPrice" type="number">
-
   <button class="action" onclick="processSale()">✅ تنفيذ البيع</button>
 </section>
 
@@ -87,27 +74,20 @@ th { background:#e3f2fd; }
   <label>📦 الباركود</label>
   <input id="pbarcode">
   <button class="action" onclick="startScanner('product')">📷 مسح</button>
-
   <label>📛 اسم المنتج</label>
   <input id="pname">
-
   <label>💲 سعر التكلفة</label>
   <input id="pcost" type="number">
-
   <label>💲 سعر المبيع</label>
   <input id="psell" type="number">
-
   <label>🔢 الكمية</label>
   <input id="pstock" type="number">
-
   <button class="action" onclick="addProduct()">➕ إضافة / تحديث</button>
-
   <table id="productsTable">
     <thead><tr><th>باركود</th><th>اسم</th><th>تكلفة</th><th>مبيع</th><th>كمية</th></tr></thead>
     <tbody></tbody>
   </table>
   <p>📊 إجمالي الكمية: <span id="totalStock">0</span></p>
-
   <button class="btn-exp" onclick="exportProducts('json')">⬇️ تصدير JSON</button>
   <button class="btn-exp" onclick="exportProducts('excel')">⬇️ تصدير Excel</button>
   <input type="file" id="importProductsFile" onchange="importProducts(event)" hidden>
@@ -128,7 +108,7 @@ th { background:#e3f2fd; }
   <h2>📑 سجل المبيعات</h2>
   <table id="historyTable">
     <thead>
-      <tr><th>باركود</th><th>اسم</th><th>كمية</th><th>سعر</th><th>إجمالي</th><th>تاريخ</th><th>إجراء</th></tr>
+      <tr><th>باركود</th><th>اسم</th><th>كمية</th><th>سعر</th><th>إجمالي</th><th>تاريخ</th></tr>
     </thead>
     <tbody></tbody>
   </table>
@@ -138,8 +118,13 @@ th { background:#e3f2fd; }
   <button class="btn-exp" onclick="document.getElementById('importSalesFile').click()">⬆️ استيراد</button>
 </section>
 
+<!-- ✅ صفحة صافي الربح -->
+<section id="profit">
+  <h2>📈 صافي الربح</h2>
+  <div class="profit-box">إجمالي الربح: <span id="totalProfit">0</span></div>
+</section>
+
 <script>
-/* التخزين: localForage (يعتمد IndexedDB) */
 localforage.config({name:'shopdb'});
 const prodStore=localforage.createInstance({name:'shopdb',storeName:'products'});
 const saleStore=localforage.createInstance({name:'shopdb',storeName:'sales'});
@@ -147,17 +132,15 @@ let products=[],sales=[];
 let codeReader=new ZXing.BrowserMultiFormatReader();
 let currentStream=null, scannerMode=null;
 
-/* تبديل الصفحات */
 function showPage(id){
   document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
   document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
   document.getElementById(id).classList.add("active");
   document.getElementById("btn-"+id).classList.add("active");
   if(id==="products") loadProducts();
-  if(id==="history") loadSales();
+  if(id==="history"||id==="profit") loadSales(); // لحساب الربح عند فتح صفحة الربح
 }
 
-/* ✅ ماسح الباركود بمودال مع زر إغلاق */
 async function startScanner(mode){
   scannerMode=mode;
   document.getElementById("scannerModal").style.display="flex";
@@ -187,13 +170,7 @@ function handleScan(code){
 
 /* المنتجات */
 async function addProduct(){
-  let p={
-    barcode:pbarcode.value.trim(),
-    name:pname.value.trim(),
-    cost:+pcost.value||0,
-    sell:+psell.value||0,
-    stock:+pstock.value||0
-  };
+  let p={barcode:pbarcode.value.trim(),name:pname.value.trim(),cost:+pcost.value||0,sell:+psell.value||0,stock:+pstock.value||0};
   if(!p.barcode) return alert("❌ أدخل باركود");
   await prodStore.setItem(p.barcode,p);
   pbarcode.value=pname.value=pcost.value=psell.value=pstock.value="";
@@ -209,8 +186,6 @@ async function loadProducts(){
   });
   document.getElementById("totalStock").textContent=total;
 }
-
-/* تصدير/استيراد المنتجات */
 function exportProducts(type){
   if(type==="json"){
     const data=JSON.stringify(products,null,2);
@@ -226,18 +201,14 @@ function importProducts(e){
   const reader=new FileReader();
   reader.onload=async(ev)=>{
     let data=[];
-    if(file.name.endsWith(".json")){
-      data=JSON.parse(ev.target.result);
-    }else{
+    if(file.name.endsWith(".json")) data=JSON.parse(ev.target.result);
+    else{
       const wb=XLSX.read(ev.target.result,{type:"binary"});
       data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
     }
     for(const p of data){
       if(p.barcode){
-        await prodStore.setItem(
-          p.barcode,
-          {barcode:p.barcode,name:p.name||"",cost:+p.cost||0,sell:+p.sell||0,stock:+p.stock||0}
-        );
+        await prodStore.setItem(p.barcode,{barcode:p.barcode,name:p.name||"",cost:+p.cost||0,sell:+p.sell||0,stock:+p.stock||0});
       }
     }
     loadProducts(); alert("✔ تم استيراد كل المنتجات");
@@ -252,19 +223,13 @@ async function loadProductName(barcode){
   sellName.value=p? p.name : "❌ غير موجود";
 }
 async function processSale(){
-  let b=sellBarcode.value.trim(),
-      q=+sellQty.value||1,
-      pr=+sellPrice.value||0;
+  let b=sellBarcode.value.trim(), q=+sellQty.value||1, pr=+sellPrice.value||0;
   if(!b) return alert("❌ أدخل باركود");
   let p=await prodStore.getItem(b);
   if(!p) return alert("❌ المنتج غير موجود");
   if(p.stock<q) return alert("❌ مخزون غير كافي");
-
   p.stock-=q; await prodStore.setItem(b,p);
-  let s={
-    id:Date.now(), barcode:b, name:p.name,
-    qty:q, price:pr, total:q*pr, date:new Date().toLocaleString()
-  };
+  let s={id:Date.now(),barcode:b,name:p.name,qty:q,price:pr,total:q*pr,cost:p.cost,date:new Date().toLocaleString()};
   await saleStore.setItem(s.id,s);
   alert("✔ تمت عملية البيع: "+p.name);
   sellBarcode.value=sellName.value=sellPrice.value=""; sellQty.value=1;
@@ -279,45 +244,21 @@ async function checkPrice(){
   checkResult.textContent=p? `💲 سعر المبيع: ${p.sell}` : "❌ غير موجود";
 }
 
-/* السجل */
+/* السجل + صافي الربح */
 async function loadSales(){
   sales=[]; await saleStore.iterate(v=>sales.push(v));
   sales.sort((a,b)=>b.id-a.id);
   let t=document.querySelector("#historyTable tbody"); t.innerHTML="";
+  let profit=0;
   sales.forEach(s=>{
-    t.innerHTML+=`<tr id="row_${s.id}">
+    profit += (s.price - s.cost) * s.qty;
+    t.innerHTML+=`<tr>
       <td>${s.barcode}</td><td>${s.name}</td><td>${s.qty||1}</td>
       <td>${s.price}</td><td>${s.total}</td><td>${s.date}</td>
-      <td>
-        <button class="btn-sm btn-edit" onclick="editSale(${s.id})">✏️</button>
-        <button class="btn-sm btn-del" onclick="deleteSale(${s.id})">🗑</button>
-      </td>
     </tr>`;
   });
+  document.getElementById("totalProfit").textContent = profit;
 }
-function editSale(id){
-  let s=sales.find(x=>x.id===id); if(!s) return;
-  let tr=document.getElementById("row_"+id);
-  tr.innerHTML=`<td>${s.barcode}</td><td>${s.name}</td>
-    <td><input id="e_qty_${id}" type="number" value="${s.qty||1}" style="width:60px"></td>
-    <td><input id="e_price_${id}" type="number" value="${s.price}" style="width:80px"></td>
-    <td>${s.total}</td><td>${s.date}</td>
-    <td><button onclick="saveSale(${id})">💾</button>
-        <button onclick="loadSales()">↩</button></td>`;
-}
-async function saveSale(id){
-  let s=await saleStore.getItem(id); if(!s) return;
-  let newQty=+document.getElementById("e_qty_"+id).value||1;
-  let newPrice=+document.getElementById("e_price_"+id).value||0;
-  s.qty=newQty; s.price=newPrice; s.total=newQty*newPrice;
-  await saleStore.setItem(id,s); loadSales();
-}
-async function deleteSale(id){
-  if(!confirm("❌ هل تريد حذف العملية؟")) return;
-  await saleStore.removeItem(id); loadSales();
-}
-
-/* تصدير/استيراد السجل */
 function exportSales(type){
   if(type==="json"){
     const data=JSON.stringify(sales,null,2);
@@ -333,18 +274,18 @@ function importSales(e){
   const reader=new FileReader();
   reader.onload=async(ev)=>{
     let data=[];
-    if(file.name.endsWith(".json")){
-      data=JSON.parse(ev.target.result);
-    }else{
+    if(file.name.endsWith(".json")) data=JSON.parse(ev.target.result);
+    else{
       const wb=XLSX.read(ev.target.result,{type:"binary"});
       data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
     }
     for(const s of data){
       if(s.id){
-        await saleStore.setItem(
-          s.id,
-          {id:s.id,barcode:s.barcode,name:s.name||"",qty:+s.qty||1,price:+s.price||0,total:+s.total||0,date:s.date||new Date().toLocaleString()}
-        );
+        await saleStore.setItem(s.id,{
+          id:s.id,barcode:s.barcode,name:s.name||"",
+          qty:+s.qty||1,price:+s.price||0,total:+s.total||0,
+          cost:+s.cost||0,date:s.date||new Date().toLocaleString()
+        });
       }
     }
     loadSales(); alert("✔ تم استيراد كل السجل");
@@ -353,7 +294,6 @@ function importSales(e){
   else reader.readAsBinaryString(file);
 }
 
-/* تنزيل ملف */
 function downloadFile(name,content,type){
   const blob=new Blob([content],{type});
   const url=URL.createObjectURL(blob);
