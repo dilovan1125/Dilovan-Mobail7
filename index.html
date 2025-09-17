@@ -88,8 +88,12 @@ th{background:#e3f2fd;}
   </table>
   <p>📊 إجمالي الكمية: <span id="totalStock">0</span></p>
   <p>💰 إجمالي سعر المخزون (التكلفة): <span id="totalCost">0</span></p>
-</section>
 
+  <button class="btn-exp" onclick="exportProducts('json')">⬇️ تصدير JSON</button>
+  <button class="btn-exp" onclick="exportProducts('excel')">⬇️ تصدير Excel</button>
+  <input type="file" id="importProductsFile" onchange="importProducts(event)" hidden>
+  <button class="btn-exp" onclick="document.getElementById('importProductsFile').click()">⬆️ استيراد</button>
+</section>
 <section id="check">
   <h2>🔍 معرفة السعر</h2>
   <label>📦 الباركود</label>
@@ -106,6 +110,11 @@ th{background:#e3f2fd;}
     </thead>
     <tbody></tbody>
   </table>
+
+  <button class="btn-exp" onclick="exportSales('json')">⬇️ تصدير JSON</button>
+  <button class="btn-exp" onclick="exportSales('excel')">⬇️ تصدير Excel</button>
+  <input type="file" id="importSalesFile" onchange="importSales(event)" hidden>
+  <button class="btn-exp" onclick="document.getElementById('importSalesFile').click()">⬆️ استيراد</button>
 </section>
 
 <section id="profit">
@@ -156,8 +165,7 @@ function handleScan(code){
   if(scannerMode==="check"){ checkBarcode.value=code; checkPrice(); }
   stopScanner();
 }
-
-/* المنتجات */
+  /* المنتجات */
 async function addProduct(){
   let p={barcode:pbarcode.value.trim(),name:pname.value.trim(),cost:+pcost.value||0,sell:+psell.value||0,stock:+pstock.value||0};
   if(!p.barcode) return alert("❌ أدخل باركود");
@@ -195,6 +203,37 @@ async function loadProducts(){
   });
   document.getElementById("totalStock").textContent=totalQty;
   document.getElementById("totalCost").textContent=totalCost;
+}
+function exportProducts(type){
+  if(type==="json"){
+    const data=JSON.stringify(products,null,2);
+    downloadFile("products.json",data,"application/json");
+  }else{
+    const ws=XLSX.utils.json_to_sheet(products);
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Products");
+    XLSX.writeFile(wb,"products.xlsx");
+  }
+}
+function importProducts(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async(ev)=>{
+    let data=[];
+    if(file.name.endsWith(".json")){
+      data=JSON.parse(ev.target.result);
+    }else{
+      const wb=XLSX.read(ev.target.result,{type:"binary"});
+      data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    }
+    for(const p of data){
+      if(p.barcode){
+        await prodStore.setItem(p.barcode,{barcode:p.barcode,name:p.name||"",cost:+p.cost||0,sell:+p.sell||0,stock:+p.stock||0});
+      }
+    }
+    loadProducts(); alert("✔ تم استيراد كل المنتجات");
+  };
+  if(file.name.endsWith(".json")) reader.readAsText(file);
+  else reader.readAsBinaryString(file);
 }
 
 /* البيع */
@@ -244,7 +283,7 @@ async function loadSales(){
   document.getElementById("totalProfit").textContent = profit;
 }
 async function editSale(id){
-  let s=sales.find(x=>x.id===id); if(!s) return;
+  let s=await saleStore.getItem(id); if(!s) return;
   let tr=document.getElementById("row_"+id);
   tr.innerHTML=`<td>${s.barcode}</td><td>${s.name}</td>
     <td><input id="e_qty_${id}" type="number" value="${s.qty||1}" style="width:60px"></td>
@@ -263,7 +302,43 @@ async function deleteSale(id){
   if(!confirm("❌ هل تريد حذف العملية؟")) return;
   await saleStore.removeItem(id); loadSales();
 }
+function exportSales(type){
+  if(type==="json"){
+    const data=JSON.stringify(sales,null,2);
+    downloadFile("sales.json",data,"application/json");
+  }else{
+    const ws=XLSX.utils.json_to_sheet(sales);
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Sales");
+    XLSX.writeFile(wb,"sales.xlsx");
+  }
+}
+function importSales(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async(ev)=>{
+    let data=[];
+    if(file.name.endsWith(".json")){
+      data=JSON.parse(ev.target.result);
+    }else{
+      const wb=XLSX.read(ev.target.result,{type:"binary"});
+      data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    }
+    for(const s of data){
+      if(s.id){
+        await saleStore.setItem(s.id,{
+          id:s.id,barcode:s.barcode,name:s.name||"",
+          qty:+s.qty||1,price:+s.price||0,total:+s.total||0,
+          cost:+s.cost||0,date:s.date||new Date().toLocaleString()
+        });
+      }
+    }
+    loadSales(); alert("✔ تم استيراد كل السجل");
+  };
+  if(file.name.endsWith(".json")) reader.readAsText(file);
+  else reader.readAsBinaryString(file);
+}
 
+/* تنزيل ملف */
 function downloadFile(name,content,type){
   const blob=new Blob([content],{type});
   const url=URL.createObjectURL(blob);
