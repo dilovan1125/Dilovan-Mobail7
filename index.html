@@ -22,11 +22,10 @@ button.action:hover{background:#0d47a1;}
 table{width:100%;border-collapse:collapse;margin-top:15px;font-size:15px;}
 th,td{border:1px solid #ddd;padding:8px;text-align:center;}
 th{background:#e3f2fd;}
-.btn-sm{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
+.btn-sm{padding:4px 8px;border:none;border-radius:6px;cursor:pointer;font-size:14px;}
 .btn-edit{background:#3498db;color:#fff;}
 .btn-del{background:#e74c3c;color:#fff;}
 .btn-exp{background:#1abc9c;color:#fff;margin-top:10px;}
-/* مودال الماسح */
 #scannerModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);justify-content:center;align-items:center;z-index:999;}
 #scannerBox{background:#fff;padding:10px;border-radius:10px;position:relative;width:320px;height:280px;display:flex;flex-direction:column;align-items:center;}
 #scannerBox video{width:100%;height:100%;object-fit:cover;border-radius:8px;}
@@ -45,7 +44,6 @@ th{background:#e3f2fd;}
   <button onclick="showPage('profit')" id="btn-profit">📈 صافي الربح</button>
 </nav>
 
-<!-- مودال الماسح -->
 <div id="scannerModal">
   <div id="scannerBox">
     <button id="closeScan" onclick="stopScanner()">✖ إغلاق</button>
@@ -53,7 +51,6 @@ th{background:#e3f2fd;}
   </div>
 </div>
 
-<!-- البيع -->
 <section id="sell" class="active">
   <h2>🛒 البيع</h2>
   <label>📦 الباركود</label>
@@ -68,7 +65,6 @@ th{background:#e3f2fd;}
   <button class="action" onclick="processSale()">✅ تنفيذ البيع</button>
 </section>
 
-<!-- المنتجات -->
 <section id="products">
   <h2>📦 إدارة المنتجات</h2>
   <label>📦 الباركود</label>
@@ -83,18 +79,16 @@ th{background:#e3f2fd;}
   <label>🔢 الكمية</label>
   <input id="pstock" type="number">
   <button class="action" onclick="addProduct()">➕ إضافة / تحديث</button>
+
   <table id="productsTable">
-    <thead><tr><th>باركود</th><th>اسم</th><th>تكلفة</th><th>مبيع</th><th>كمية</th></tr></thead>
+    <thead>
+      <tr><th>باركود</th><th>اسم</th><th>تكلفة</th><th>مبيع</th><th>كمية</th><th>إجراء</th></tr>
+    </thead>
     <tbody></tbody>
   </table>
   <p>📊 إجمالي الكمية: <span id="totalStock">0</span></p>
-  <button class="btn-exp" onclick="exportProducts('json')">⬇️ تصدير JSON</button>
-  <button class="btn-exp" onclick="exportProducts('excel')">⬇️ تصدير Excel</button>
-  <input type="file" id="importProductsFile" onchange="importProducts(event)" hidden>
-  <button class="btn-exp" onclick="document.getElementById('importProductsFile').click()">⬆️ استيراد</button>
 </section>
 
-<!-- معرفة السعر -->
 <section id="check">
   <h2>🔍 معرفة السعر</h2>
   <label>📦 الباركود</label>
@@ -103,22 +97,16 @@ th{background:#e3f2fd;}
   <div id="checkResult" style="margin-top:15px;font-size:18px;font-weight:bold;color:#0d47a1;"></div>
 </section>
 
-<!-- السجل -->
 <section id="history">
   <h2>📑 سجل المبيعات</h2>
   <table id="historyTable">
     <thead>
-      <tr><th>باركود</th><th>اسم</th><th>كمية</th><th>سعر</th><th>إجمالي</th><th>تاريخ</th></tr>
+      <tr><th>باركود</th><th>اسم</th><th>كمية</th><th>سعر</th><th>إجمالي</th><th>تاريخ</th><th>إجراء</th></tr>
     </thead>
     <tbody></tbody>
   </table>
-  <button class="btn-exp" onclick="exportSales('json')">⬇️ تصدير JSON</button>
-  <button class="btn-exp" onclick="exportSales('excel')">⬇️ تصدير Excel</button>
-  <input type="file" id="importSalesFile" onchange="importSales(event)" hidden>
-  <button class="btn-exp" onclick="document.getElementById('importSalesFile').click()">⬆️ استيراد</button>
 </section>
 
-<!-- ✅ صفحة صافي الربح -->
 <section id="profit">
   <h2>📈 صافي الربح</h2>
   <div class="profit-box">إجمالي الربح: <span id="totalProfit">0</span></div>
@@ -138,7 +126,7 @@ function showPage(id){
   document.getElementById(id).classList.add("active");
   document.getElementById("btn-"+id).classList.add("active");
   if(id==="products") loadProducts();
-  if(id==="history"||id==="profit") loadSales(); // لحساب الربح عند فتح صفحة الربح
+  if(id==="history"||id==="profit") loadSales();
 }
 
 async function startScanner(mode){
@@ -173,7 +161,20 @@ async function addProduct(){
   let p={barcode:pbarcode.value.trim(),name:pname.value.trim(),cost:+pcost.value||0,sell:+psell.value||0,stock:+pstock.value||0};
   if(!p.barcode) return alert("❌ أدخل باركود");
   await prodStore.setItem(p.barcode,p);
-  pbarcode.value=pname.value=pcost.value=psell.value=pstock.value="";
+  clearProductForm();
+  loadProducts();
+}
+function clearProductForm(){ pbarcode.value=pname.value=pcost.value=psell.value=pstock.value=""; }
+async function editProduct(code){
+  let p=await prodStore.getItem(code);
+  if(!p) return;
+  pbarcode.value=p.barcode; pname.value=p.name; pcost.value=p.cost;
+  psell.value=p.sell; pstock.value=p.stock;
+  showPage('products');
+}
+async function deleteProduct(code){
+  if(!confirm("❌ حذف المنتج؟")) return;
+  await prodStore.removeItem(code);
   loadProducts();
 }
 async function loadProducts(){
@@ -182,39 +183,15 @@ async function loadProducts(){
   let total=0;
   products.forEach(p=>{
     total+=p.stock;
-    t.innerHTML+=`<tr><td>${p.barcode}</td><td>${p.name}</td><td>${p.cost}</td><td>${p.sell}</td><td>${p.stock}</td></tr>`;
+    t.innerHTML+=`<tr>
+      <td>${p.barcode}</td><td>${p.name}</td><td>${p.cost}</td><td>${p.sell}</td><td>${p.stock}</td>
+      <td>
+        <button class="btn-sm btn-edit" onclick="editProduct('${p.barcode}')">✏️</button>
+        <button class="btn-sm btn-del" onclick="deleteProduct('${p.barcode}')">🗑</button>
+      </td>
+    </tr>`;
   });
   document.getElementById("totalStock").textContent=total;
-}
-function exportProducts(type){
-  if(type==="json"){
-    const data=JSON.stringify(products,null,2);
-    downloadFile("products.json",data,"application/json");
-  }else{
-    const ws=XLSX.utils.json_to_sheet(products);
-    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Products");
-    XLSX.writeFile(wb,"products.xlsx");
-  }
-}
-function importProducts(e){
-  const file=e.target.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=async(ev)=>{
-    let data=[];
-    if(file.name.endsWith(".json")) data=JSON.parse(ev.target.result);
-    else{
-      const wb=XLSX.read(ev.target.result,{type:"binary"});
-      data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-    }
-    for(const p of data){
-      if(p.barcode){
-        await prodStore.setItem(p.barcode,{barcode:p.barcode,name:p.name||"",cost:+p.cost||0,sell:+p.sell||0,stock:+p.stock||0});
-      }
-    }
-    loadProducts(); alert("✔ تم استيراد كل المنتجات");
-  };
-  if(file.name.endsWith(".json")) reader.readAsText(file);
-  else reader.readAsBinaryString(file);
 }
 
 /* البيع */
@@ -252,46 +229,36 @@ async function loadSales(){
   let profit=0;
   sales.forEach(s=>{
     profit += (s.price - s.cost) * s.qty;
-    t.innerHTML+=`<tr>
+    t.innerHTML+=`<tr id="row_${s.id}">
       <td>${s.barcode}</td><td>${s.name}</td><td>${s.qty||1}</td>
       <td>${s.price}</td><td>${s.total}</td><td>${s.date}</td>
+      <td>
+        <button class="btn-sm btn-edit" onclick="editSale(${s.id})">✏️</button>
+        <button class="btn-sm btn-del" onclick="deleteSale(${s.id})">🗑</button>
+      </td>
     </tr>`;
   });
   document.getElementById("totalProfit").textContent = profit;
 }
-function exportSales(type){
-  if(type==="json"){
-    const data=JSON.stringify(sales,null,2);
-    downloadFile("sales.json",data,"application/json");
-  }else{
-    const ws=XLSX.utils.json_to_sheet(sales);
-    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Sales");
-    XLSX.writeFile(wb,"sales.xlsx");
-  }
+async function editSale(id){
+  let s=sales.find(x=>x.id===id); if(!s) return;
+  let tr=document.getElementById("row_"+id);
+  tr.innerHTML=`<td>${s.barcode}</td><td>${s.name}</td>
+    <td><input id="e_qty_${id}" type="number" value="${s.qty||1}" style="width:60px"></td>
+    <td><input id="e_price_${id}" type="number" value="${s.price}" style="width:80px"></td>
+    <td>${s.total}</td><td>${s.date}</td>
+    <td><button onclick="saveSale(${id})">💾</button><button onclick="loadSales()">↩</button></td>`;
 }
-function importSales(e){
-  const file=e.target.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=async(ev)=>{
-    let data=[];
-    if(file.name.endsWith(".json")) data=JSON.parse(ev.target.result);
-    else{
-      const wb=XLSX.read(ev.target.result,{type:"binary"});
-      data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-    }
-    for(const s of data){
-      if(s.id){
-        await saleStore.setItem(s.id,{
-          id:s.id,barcode:s.barcode,name:s.name||"",
-          qty:+s.qty||1,price:+s.price||0,total:+s.total||0,
-          cost:+s.cost||0,date:s.date||new Date().toLocaleString()
-        });
-      }
-    }
-    loadSales(); alert("✔ تم استيراد كل السجل");
-  };
-  if(file.name.endsWith(".json")) reader.readAsText(file);
-  else reader.readAsBinaryString(file);
+async function saveSale(id){
+  let s=await saleStore.getItem(id); if(!s) return;
+  let newQty=+document.getElementById("e_qty_"+id).value||1;
+  let newPrice=+document.getElementById("e_price_"+id).value||0;
+  s.qty=newQty; s.price=newPrice; s.total=newQty*newPrice;
+  await saleStore.setItem(id,s); loadSales();
+}
+async function deleteSale(id){
+  if(!confirm("❌ هل تريد حذف العملية؟")) return;
+  await saleStore.removeItem(id); loadSales();
 }
 
 function downloadFile(name,content,type){
