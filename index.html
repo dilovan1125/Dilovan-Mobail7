@@ -87,6 +87,7 @@ th{background:#e3f2fd;}
     <tbody></tbody>
   </table>
   <p>📊 إجمالي الكمية: <span id="totalStock">0</span></p>
+  <p>💰 إجمالي سعر المخزون (التكلفة): <span id="totalCost">0</span></p>
 </section>
 
 <section id="check">
@@ -180,9 +181,10 @@ async function deleteProduct(code){
 async function loadProducts(){
   products=[]; await prodStore.iterate(v=>products.push(v));
   let t=document.querySelector("#productsTable tbody"); t.innerHTML="";
-  let total=0;
+  let totalQty=0,totalCost=0;
   products.forEach(p=>{
-    total+=p.stock;
+    totalQty+=p.stock;
+    totalCost+=p.cost * p.stock;
     t.innerHTML+=`<tr>
       <td>${p.barcode}</td><td>${p.name}</td><td>${p.cost}</td><td>${p.sell}</td><td>${p.stock}</td>
       <td>
@@ -191,7 +193,8 @@ async function loadProducts(){
       </td>
     </tr>`;
   });
-  document.getElementById("totalStock").textContent=total;
+  document.getElementById("totalStock").textContent=totalQty;
+  document.getElementById("totalCost").textContent=totalCost;
 }
 
 /* البيع */
