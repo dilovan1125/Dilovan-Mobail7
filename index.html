@@ -5,31 +5,30 @@
 <title>💰 نظام المبيعات</title>
 <script src="https://unpkg.com/@zxing/library@0.20.0"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-body { font-family:"Cairo",sans-serif; margin:0; background:#f0f6ff; color:#333; direction:rtl; }
-header { background:#1976d2; color:white; padding:20px; text-align:center; font-size:24px; font-weight:bold; }
-nav { display:flex; justify-content:space-around; background:#2196f3; padding:12px; }
-nav button { background:white; color:#1976d2; border:none; padding:12px 18px; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer; }
-nav button.active { background:#0d47a1; color:white; }
-section { display:none; max-width:950px; margin:20px auto; background:white; padding:20px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.15); }
-section.active { display:block; animation:fadeIn 0.3s ease; }
-@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-label { display:block; margin-top:12px; font-weight:bold; color:#0d47a1; }
-input,button.action { margin-top:6px; padding:10px; font-size:16px; width:100%; border-radius:6px; border:1px solid #bbb; box-sizing:border-box; }
-button.action { background:#1976d2; color:white; border:none; font-weight:bold; cursor:pointer; }
-button.action:hover { background:#0d47a1; }
-table { width:100%; border-collapse:collapse; margin-top:15px; font-size:15px; }
-th,td { border:1px solid #ddd; padding:8px; text-align:center; }
-th { background:#e3f2fd; }
-#scannerModal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); align-items:center; justify-content:center; }
-#scanner { width:300px; height:250px; border:3px solid #1976d2; border-radius:8px; overflow:hidden; }
-#scanner video { width:100%; height:100%; object-fit:cover; }
-.btn-sm { padding:6px 10px; border:none; border-radius:6px; cursor:pointer; }
-.btn-edit { background:#3498db; color:#fff; }
-.btn-del { background:#e74c3c; color:#fff; }
-.btn-exp { background:#1abc9c; color:#fff; margin-top:10px; }
-.profit-box { font-size:20px; font-weight:bold; color:#0d47a1; margin-top:15px; }
+body{font-family:"Cairo",sans-serif;margin:0;background:#f0f6ff;color:#333;direction:rtl;}
+header{background:#1976d2;color:white;padding:20px;text-align:center;font-size:24px;font-weight:bold;}
+nav{display:flex;justify-content:space-around;background:#2196f3;padding:12px;}
+nav button{background:white;color:#1976d2;border:none;padding:12px 18px;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;}
+nav button.active{background:#0d47a1;color:white;}
+section{display:none;max-width:950px;margin:20px auto;background:white;padding:20px;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.15);}
+section.active{display:block;animation:fadeIn 0.3s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+label{display:block;margin-top:12px;font-weight:bold;color:#0d47a1;}
+input,button.action{margin-top:6px;padding:10px;font-size:16px;width:100%;border-radius:6px;border:1px solid #bbb;box-sizing:border-box;}
+button.action{background:#1976d2;color:white;border:none;font-weight:bold;cursor:pointer;}
+button.action:hover{background:#0d47a1;}
+table{width:100%;border-collapse:collapse;margin-top:15px;font-size:15px;}
+th,td{border:1px solid #ddd;padding:8px;text-align:center;}
+th{background:#e3f2fd;}
+.btn-sm{padding:4px 8px;border:none;border-radius:6px;cursor:pointer;font-size:14px;}
+.btn-edit{background:#3498db;color:#fff;}
+.btn-del{background:#e74c3c;color:#fff;}
+.profit-box{font-size:22px;font-weight:bold;color:#16a34a;margin-top:20px;}
+#scannerModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);justify-content:center;align-items:center;z-index:999;}
+#scannerBox{background:#fff;padding:10px;border-radius:10px;position:relative;width:320px;height:280px;display:flex;flex-direction:column;align-items:center;}
+#scannerBox video{width:100%;height:100%;object-fit:cover;border-radius:8px;}
+#closeScan{position:absolute;top:5px;right:5px;background:#e74c3c;color:#fff;border:none;padding:6px 10px;border-radius:6px;font-weight:bold;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -43,60 +42,52 @@ th { background:#e3f2fd; }
   <button onclick="showPage('profit')" id="btn-profit">📈 صافي الربح</button>
 </nav>
 
-<!-- البيع -->
+<div id="scannerModal">
+  <div id="scannerBox">
+    <button id="closeScan" onclick="stopScanner()">✖ إغلاق</button>
+    <video id="preview" autoplay playsinline></video>
+  </div>
+</div>
+
 <section id="sell" class="active">
   <h2>🛒 البيع</h2>
   <label>📦 الباركود</label>
   <input id="sellBarcode">
   <button class="action" onclick="startScanner('sell')">📷 مسح</button>
-
   <label>📛 اسم المنتج</label>
   <input id="sellName" readonly>
-
   <label>🔢 الكمية</label>
   <input id="sellQty" type="number" value="1">
-
   <label>💲 سعر البيع</label>
   <input id="sellPrice" type="number">
-
   <button class="action" onclick="processSale()">✅ تنفيذ البيع</button>
 </section>
 
-<!-- المنتجات -->
 <section id="products">
   <h2>📦 إدارة المنتجات</h2>
   <label>📦 الباركود</label>
   <input id="pbarcode">
   <button class="action" onclick="startScanner('product')">📷 مسح</button>
-
   <label>📛 اسم المنتج</label>
   <input id="pname">
-
   <label>💲 سعر التكلفة</label>
   <input id="pcost" type="number">
-
   <label>💲 سعر المبيع</label>
   <input id="psell" type="number">
-
   <label>🔢 الكمية</label>
   <input id="pstock" type="number">
-
   <button class="action" onclick="addProduct()">➕ إضافة / تحديث</button>
 
   <table id="productsTable">
-    <thead><tr><th>باركود</th><th>اسم</th><th>تكلفة</th><th>مبيع</th><th>كمية</th><th>إجراء</th></tr></thead>
+    <thead>
+      <tr><th>باركود</th><th>اسم</th><th>تكلفة</th><th>مبيع</th><th>كمية</th><th>إجراء</th></tr>
+    </thead>
     <tbody></tbody>
   </table>
   <p>📊 إجمالي الكمية: <span id="totalStock">0</span></p>
   <p>💵 إجمالي تكلفة المخزون: <span id="totalCost">0</span></p>
-
-  <button class="btn-exp" onclick="exportProducts('json')">⬇️ تصدير JSON</button>
-  <button class="btn-exp" onclick="exportProducts('excel')">⬇️ تصدير Excel</button>
-  <input type="file" id="importProductsFile" onchange="importProducts(event)" hidden>
-  <button class="btn-exp" onclick="document.getElementById('importProductsFile').click()">⬆️ استيراد</button>
 </section>
 
-<!-- معرفة السعر -->
 <section id="check">
   <h2>🔍 معرفة السعر</h2>
   <label>📦 الباركود</label>
@@ -105,7 +96,6 @@ th { background:#e3f2fd; }
   <div id="checkResult" style="margin-top:15px;font-size:18px;font-weight:bold;color:#0d47a1;"></div>
 </section>
 
-<!-- السجل -->
 <section id="history">
   <h2>📑 سجل المبيعات</h2>
   <table id="historyTable">
@@ -114,199 +104,12 @@ th { background:#e3f2fd; }
     </thead>
     <tbody></tbody>
   </table>
-
-  <button class="btn-exp" onclick="exportSales('json')">⬇️ تصدير JSON</button>
-  <button class="btn-exp" onclick="exportSales('excel')">⬇️ تصدير Excel</button>
-  <input type="file" id="importSalesFile" onchange="importSales(event)" hidden>
-  <button class="btn-exp" onclick="document.getElementById('importSalesFile').click()">⬆️ استيراد</button>
 </section>
 
-<!-- صافي الربح -->
 <section id="profit">
   <h2>📈 صافي الربح</h2>
   <div class="profit-box">إجمالي الربح: <span id="totalProfit">0</span></div>
 </section>
-
-<div id="scannerModal">
-  <div id="scanner"><video id="preview" autoplay playsinline></video></div>
-  <button class="action" onclick="stopScanner()">❌ إغلاق</button>
-</div>
-
-<script>
-localforage.config({name:'shopdb'});
-const prodStore=localforage.createInstance({name:'shopdb',storeName:'products'});
-const saleStore=localforage.createInstance({name:'shopdb',storeName:'sales'});
-let products=[],sales=[];
-let codeReader=new ZXing.BrowserMultiFormatReader();
-let currentStream=null, scannerMode=null;
-
-function showPage(id){
-  document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
-  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-  document.getElementById("btn-"+id).classList.add("active");
-  if(id==="products") loadProducts();
-  if(id==="history"||id==="profit") loadSales();
-}
-
-async function startScanner(mode){
-  scannerMode=mode;
-  document.getElementById("scannerModal").style.display="flex";
-  try{
-    const constraints={video:{facingMode:"environment"}};
-    currentStream=await navigator.mediaDevices.getUserMedia(constraints);
-    document.getElementById("preview").srcObject=currentStream;
-    codeReader.decodeFromVideoDevice(null,"preview",(res,err)=>{
-      if(res){ handleScan(res.text); }
-    });
-  }catch(e){
-    alert("❌ لم يتم فتح الكاميرا");
-    document.getElementById("scannerModal").style.display="none";
-  }
-}
-function stopScanner(){
-  try{ codeReader.reset(); }catch(e){}
-  if(currentStream){ currentStream.getTracks().forEach(t=>t.stop()); }
-  document.getElementById("scannerModal").style.display="none";
-}
-function handleScan(code){
-  if(scannerMode==="sell"){ sellBarcode.value=code; loadProductName(code); }
-  if(scannerMode==="product"){ pbarcode.value=code; }
-  if(scannerMode==="check"){ checkBarcode.value=code; checkPrice(); }
-  stopScanner();
-  <!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<title>💰 نظام المبيعات</title>
-<script src="https://unpkg.com/@zxing/library@0.20.0"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>
-body { font-family:"Cairo",sans-serif; margin:0; background:#f0f6ff; color:#333; direction:rtl; }
-header { background:#1976d2; color:white; padding:20px; text-align:center; font-size:24px; font-weight:bold; }
-nav { display:flex; justify-content:space-around; background:#2196f3; padding:12px; }
-nav button { background:white; color:#1976d2; border:none; padding:12px 18px; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer; }
-nav button.active { background:#0d47a1; color:white; }
-section { display:none; max-width:950px; margin:20px auto; background:white; padding:20px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.15); }
-section.active { display:block; animation:fadeIn 0.3s ease; }
-@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-label { display:block; margin-top:12px; font-weight:bold; color:#0d47a1; }
-input,button.action { margin-top:6px; padding:10px; font-size:16px; width:100%; border-radius:6px; border:1px solid #bbb; box-sizing:border-box; }
-button.action { background:#1976d2; color:white; border:none; font-weight:bold; cursor:pointer; }
-button.action:hover { background:#0d47a1; }
-table { width:100%; border-collapse:collapse; margin-top:15px; font-size:15px; }
-th,td { border:1px solid #ddd; padding:8px; text-align:center; }
-th { background:#e3f2fd; }
-#scannerModal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); align-items:center; justify-content:center; }
-#scanner { width:300px; height:250px; border:3px solid #1976d2; border-radius:8px; overflow:hidden; }
-#scanner video { width:100%; height:100%; object-fit:cover; }
-.btn-sm { padding:6px 10px; border:none; border-radius:6px; cursor:pointer; }
-.btn-edit { background:#3498db; color:#fff; }
-.btn-del { background:#e74c3c; color:#fff; }
-.btn-exp { background:#1abc9c; color:#fff; margin-top:10px; }
-.profit-box { font-size:20px; font-weight:bold; color:#0d47a1; margin-top:15px; }
-</style>
-</head>
-<body>
-
-<header>💰 نظام المبيعات</header>
-<nav>
-  <button onclick="showPage('sell')" id="btn-sell" class="active">🛒 البيع</button>
-  <button onclick="showPage('products')" id="btn-products">📦 المنتجات</button>
-  <button onclick="showPage('check')" id="btn-check">🔍 معرفة السعر</button>
-  <button onclick="showPage('history')" id="btn-history">📑 السجل</button>
-  <button onclick="showPage('profit')" id="btn-profit">📈 صافي الربح</button>
-</nav>
-
-<!-- البيع -->
-<section id="sell" class="active">
-  <h2>🛒 البيع</h2>
-  <label>📦 الباركود</label>
-  <input id="sellBarcode">
-  <button class="action" onclick="startScanner('sell')">📷 مسح</button>
-
-  <label>📛 اسم المنتج</label>
-  <input id="sellName" readonly>
-
-  <label>🔢 الكمية</label>
-  <input id="sellQty" type="number" value="1">
-
-  <label>💲 سعر البيع</label>
-  <input id="sellPrice" type="number">
-
-  <button class="action" onclick="processSale()">✅ تنفيذ البيع</button>
-</section>
-
-<!-- المنتجات -->
-<section id="products">
-  <h2>📦 إدارة المنتجات</h2>
-  <label>📦 الباركود</label>
-  <input id="pbarcode">
-  <button class="action" onclick="startScanner('product')">📷 مسح</button>
-
-  <label>📛 اسم المنتج</label>
-  <input id="pname">
-
-  <label>💲 سعر التكلفة</label>
-  <input id="pcost" type="number">
-
-  <label>💲 سعر المبيع</label>
-  <input id="psell" type="number">
-
-  <label>🔢 الكمية</label>
-  <input id="pstock" type="number">
-
-  <button class="action" onclick="addProduct()">➕ إضافة / تحديث</button>
-
-  <table id="productsTable">
-    <thead><tr><th>باركود</th><th>اسم</th><th>تكلفة</th><th>مبيع</th><th>كمية</th><th>إجراء</th></tr></thead>
-    <tbody></tbody>
-  </table>
-  <p>📊 إجمالي الكمية: <span id="totalStock">0</span></p>
-  <p>💵 إجمالي تكلفة المخزون: <span id="totalCost">0</span></p>
-
-  <button class="btn-exp" onclick="exportProducts('json')">⬇️ تصدير JSON</button>
-  <button class="btn-exp" onclick="exportProducts('excel')">⬇️ تصدير Excel</button>
-  <input type="file" id="importProductsFile" onchange="importProducts(event)" hidden>
-  <button class="btn-exp" onclick="document.getElementById('importProductsFile').click()">⬆️ استيراد</button>
-</section>
-
-<!-- معرفة السعر -->
-<section id="check">
-  <h2>🔍 معرفة السعر</h2>
-  <label>📦 الباركود</label>
-  <input id="checkBarcode" oninput="checkPrice()">
-  <button class="action" onclick="startScanner('check')">📷 مسح</button>
-  <div id="checkResult" style="margin-top:15px;font-size:18px;font-weight:bold;color:#0d47a1;"></div>
-</section>
-
-<!-- السجل -->
-<section id="history">
-  <h2>📑 سجل المبيعات</h2>
-  <table id="historyTable">
-    <thead>
-      <tr><th>باركود</th><th>اسم</th><th>كمية</th><th>سعر</th><th>إجمالي</th><th>تاريخ</th><th>إجراء</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <button class="btn-exp" onclick="exportSales('json')">⬇️ تصدير JSON</button>
-  <button class="btn-exp" onclick="exportSales('excel')">⬇️ تصدير Excel</button>
-  <input type="file" id="importSalesFile" onchange="importSales(event)" hidden>
-  <button class="btn-exp" onclick="document.getElementById('importSalesFile').click()">⬆️ استيراد</button>
-</section>
-
-<!-- صافي الربح -->
-<section id="profit">
-  <h2>📈 صافي الربح</h2>
-  <div class="profit-box">إجمالي الربح: <span id="totalProfit">0</span></div>
-</section>
-
-<div id="scannerModal">
-  <div id="scanner"><video id="preview" autoplay playsinline></video></div>
-  <button class="action" onclick="stopScanner()">❌ إغلاق</button>
-</div>
 
 <script>
 localforage.config({name:'shopdb'});
@@ -351,39 +154,117 @@ function handleScan(code){
   if(scannerMode==="check"){ checkBarcode.value=code; checkPrice(); }
   stopScanner();
 }
+
+/* المنتجات */
+async function addProduct(){
+  let p={barcode:pbarcode.value.trim(),name:pname.value.trim(),cost:+pcost.value||0,sell:+psell.value||0,stock:+pstock.value||0};
+  if(!p.barcode) return alert("❌ أدخل باركود");
+  await prodStore.setItem(p.barcode,p);
+  pbarcode.value=pname.value=pcost.value=psell.value=pstock.value="";
+  loadProducts();
 }
-  function importSales(e){
-  const file=e.target.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=async(ev)=>{
-    let data=[];
-    if(file.name.endsWith(".json")){
-      data=JSON.parse(ev.target.result);
-    }else{
-      const wb=XLSX.read(ev.target.result,{type:"binary"});
-      data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-    }
-    for(const s of data){
-      if(s.id){
-        await saleStore.setItem(s.id,{
-          id:s.id,barcode:s.barcode,name:s.name||"",
-          qty:+s.qty||1,price:+s.price||0,total:+s.total||0,
-          cost:+s.cost||0,date:s.date||new Date().toLocaleString()
-        });
-      }
-    }
-    loadSales(); alert("✔ تم استيراد كل السجل");
-  };
-  if(file.name.endsWith(".json")) reader.readAsText(file);
-  else reader.readAsBinaryString(file);
+async function loadProducts(){
+  products=[]; await prodStore.iterate(v=>products.push(v));
+  let t=document.querySelector("#productsTable tbody"); t.innerHTML="";
+  let totalQty=0,totalCost=0;
+  products.forEach(p=>{
+    totalQty+=p.stock;
+    totalCost+=p.cost * p.stock;
+    t.innerHTML+=`<tr>
+      <td>${p.barcode}</td><td>${p.name}</td><td>${p.cost}</td><td>${p.sell}</td><td>${p.stock}</td>
+      <td>
+        <button class="btn-sm btn-edit" onclick="editProduct('${p.barcode}')">✏️</button>
+        <button class="btn-sm btn-del" onclick="deleteProduct('${p.barcode}')">🗑</button>
+      </td>
+    </tr>`;
+  });
+  document.getElementById("totalStock").textContent=totalQty;
+  document.getElementById("totalCost").textContent=totalCost;
+}
+async function editProduct(code){
+  let p=await prodStore.getItem(code);
+  if(!p) return;
+  pbarcode.value=p.barcode; pname.value=p.name; pcost.value=p.cost;
+  psell.value=p.sell; pstock.value=p.stock;
+}
+async function deleteProduct(code){
+  if(!confirm("❌ حذف المنتج؟")) return;
+  await prodStore.removeItem(code);
+  loadProducts();
 }
 
-/* -------- تنزيل ملف عام -------- */
+/* البيع */
+async function loadProductName(barcode){
+  let p=await prodStore.getItem(barcode);
+  sellName.value=p? p.name : "❌ غير موجود";
+}
+async function processSale(){
+  let b=sellBarcode.value.trim(), q=+sellQty.value||1, pr=+sellPrice.value||0;
+  if(!b) return alert("❌ أدخل باركود");
+  let p=await prodStore.getItem(b);
+  if(!p) return alert("❌ المنتج غير موجود");
+  if(p.stock<q) return alert("❌ مخزون غير كافي");
+  p.stock-=q; await prodStore.setItem(b,p);
+  let s={id:Date.now(),barcode:b,name:p.name,qty:q,price:pr,total:q*pr,cost:p.cost,date:new Date().toLocaleString()};
+  await saleStore.setItem(s.id,s);
+  alert("✔ تمت عملية البيع: "+p.name);
+  sellBarcode.value=sellName.value=sellPrice.value=""; sellQty.value=1;
+  loadSales();
+}
+
+/* معرفة السعر */
+async function checkPrice(){
+  let b=checkBarcode.value.trim();
+  if(!b){ checkResult.textContent=""; return; }
+  let p=await prodStore.getItem(b);
+  checkResult.textContent=p? `💲 سعر المبيع: ${p.sell}` : "❌ غير موجود";
+}
+
+/* السجل + صافي الربح */
+async function loadSales(){
+  sales=[]; await saleStore.iterate(v=>sales.push(v));
+  sales.sort((a,b)=>b.id-a.id);
+  let t=document.querySelector("#historyTable tbody"); t.innerHTML="";
+  let profit=0;
+  sales.forEach(s=>{
+    profit += (s.price - s.cost) * s.qty;
+    t.innerHTML+=`<tr id="row_${s.id}">
+      <td>${s.barcode}</td><td>${s.name}</td><td>${s.qty||1}</td>
+      <td>${s.price}</td><td>${s.total}</td><td>${s.date}</td>
+      <td>
+        <button class="btn-sm btn-edit" onclick="editSale(${s.id})">✏️</button>
+        <button class="btn-sm btn-del" onclick="deleteSale(${s.id})">🗑</button>
+      </td>
+    </tr>`;
+  });
+  document.getElementById("totalProfit").textContent = profit;
+}
+async function editSale(id){
+  let s=await saleStore.getItem(id); if(!s) return;
+  let tr=document.getElementById("row_"+id);
+  tr.innerHTML=`<td>${s.barcode}</td><td>${s.name}</td>
+    <td><input id="e_qty_${id}" type="number" value="${s.qty||1}" style="width:60px"></td>
+    <td><input id="e_price_${id}" type="number" value="${s.price}" style="width:80px"></td>
+    <td>${s.total}</td><td>${s.date}</td>
+    <td><button onclick="saveSale(${id})">💾</button><button onclick="loadSales()">↩</button></td>`;
+}
+async function saveSale(id){
+  let s=await saleStore.getItem(id); if(!s) return;
+  let newQty=+document.getElementById("e_qty_"+id).value||1;
+  let newPrice=+document.getElementById("e_price_"+id).value||0;
+  s.qty=newQty; s.price=newPrice; s.total=newQty*newPrice;
+  await saleStore.setItem(id,s); loadSales();
+}
+async function deleteSale(id){
+  if(!confirm("❌ هل تريد حذف العملية؟")) return;
+  await saleStore.removeItem(id); loadSales();
+}
+
+/* تنزيل ملف (يُستخدم لتصدير Excel إذا أضفناه لاحقاً) */
 function downloadFile(name,content,type){
   const blob=new Blob([content],{type});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url; a.download=name; a.click();
+  const a=document.createElement("a"); a.href=url; a.download=name; a.click();
   URL.revokeObjectURL(url);
 }
 </script>
